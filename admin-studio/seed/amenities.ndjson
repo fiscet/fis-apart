@@ -1,0 +1,12 @@
+{"_id":"amenity-dishwasher","_type":"amenity","name":"Dishwasher","slug":{"_type":"slug","current":"dishwasher"},"active":true}
+{"_id":"amenity-sink-garbage-disposal","_type":"amenity","name":"Sink garbage disposal","slug":{"_type":"slug","current":"sink-garbage-disposal"},"active":true}
+{"_id":"amenity-microwave","_type":"amenity","name":"Microwave","slug":{"_type":"slug","current":"microwave"},"active":true}
+{"_id":"amenity-oven","_type":"amenity","name":"Oven","slug":{"_type":"slug","current":"oven"},"active":true}
+{"_id":"amenity-stove","_type":"amenity","name":"Stove","slug":{"_type":"slug","current":"stove"},"active":true}
+{"_id":"amenity-washer-and-dryer","_type":"amenity","name":"Washer and dryer","slug":{"_type":"slug","current":"washer-and-dryer"},"active":true}
+{"_id":"amenity-heating-and-air-conditioning","_type":"amenity","name":"Heating and air conditioning","slug":{"_type":"slug","current":"heating-and-air-conditioning"},"active":true}
+{"_id":"amenity-private-balcony","_type":"amenity","name":"Private balcony","slug":{"_type":"slug","current":"private-balcony"},"active":true}
+{"_id":"amenity-windows-with-views","_type":"amenity","name":"Windows with views","slug":{"_type":"slug","current":"windows-with-views"},"active":true}
+{"_id":"amenity-barbecue","_type":"amenity","name":"Barbecue","slug":{"_type":"slug","current":"barbecue"},"active":true}
+{"_id":"amenity-swimming-pool","_type":"amenity","name":"Swimming pool","slug":{"_type":"slug","current":"swimming-pool"},"active":true}
+{"_id":"amenity-bycicle","_type":"amenity","name":"Bycicle","slug":{"_type":"slug","current":"bycicle"},"active":true}
