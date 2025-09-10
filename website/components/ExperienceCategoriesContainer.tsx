@@ -1,5 +1,5 @@
-import { ExperienceCategories, ExperienceCategoryCard } from "./ExperienceCategories";
-import { client } from "@/lib/sanity/client";
+import { ExperienceCategories, ExperienceCategoryCard } from './ExperienceCategories';
+import { client } from '@/lib/sanity/client';
 
 interface SanityExperienceCategory {
   _id: string;
@@ -28,7 +28,7 @@ export async function ExperienceCategoriesContainer() {
 
   const cards: ExperienceCategoryCard[] = (categories ?? []).map((c) => ({
     name: c.name,
-    image: c.image ?? "",
+    image: c.image ?? '',
     count: c.count ?? 0,
   }));
 
@@ -40,4 +40,3 @@ export async function ExperienceCategoriesContainer() {
     />
   );
 }
-

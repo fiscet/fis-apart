@@ -103,4 +103,3 @@ export const QUERY_APARTMENT_DETAILS = `*[_type == "apartment" && slug.current =
   "amenities": amenities[]->{ _id, name, icon },
   description
 }`;
-

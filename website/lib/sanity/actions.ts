@@ -12,12 +12,14 @@ type ApartmentListItem = {
   currentPrice: number | null;
   currentCurrency: 'EUR' | 'USD' | 'GBP' | null;
   slug?: string | null;
-  capacity?: { minGuests?: number; maxGuests?: number; } | null;
+  capacity?: { minGuests?: number; maxGuests?: number } | null;
 };
 
-export async function fetchApartments(filters?: ApartmentListFilters): Promise<ApartmentListItem[]> {
+export async function fetchApartments(
+  filters?: ApartmentListFilters
+): Promise<ApartmentListItem[]> {
   try {
-    if (filters && (filters.city || filters.capacity )) {
+    if (filters && (filters.city || filters.capacity)) {
       console.log('Fetching apartments with filters:', filters);
       const query = QUERY_ALL_APARTMENTS_FILTERED;
       const params = {

@@ -1,7 +1,7 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
-import importPlugin from "eslint-plugin-import";
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { FlatCompat } from '@eslint/eslintrc';
+import importPlugin from 'eslint-plugin-import';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -11,15 +11,9 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
-    ignores: [
-      "node_modules/**",
-      ".next/**",
-      "out/**",
-      "build/**",
-      "next-env.d.ts",
-    ],
+    ignores: ['node_modules/**', '.next/**', 'out/**', 'build/**', 'next-env.d.ts'],
   },
   {
     plugins: {
@@ -27,9 +21,9 @@ const eslintConfig = [
     },
     rules: {
       // Ensure exactly one blank line after the last import block
-      "import/newline-after-import": ["error", { count: 1 }],
+      'import/newline-after-import': ['error', { count: 1 }],
       // Collapse multiple empty lines throughout the file
-      "no-multiple-empty-lines": ["error", { max: 1, maxBOF: 1, maxEOF: 1 }],
+      'no-multiple-empty-lines': ['error', { max: 1, maxBOF: 1, maxEOF: 1 }],
     },
   },
 ];

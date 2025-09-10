@@ -7,13 +7,18 @@ import { Button } from '@/components/ui/button';
 import { HeroInput } from '@/components/ui/hero-input';
 import type { ApartmentData } from '@/types/apartment';
 
-type ChatMessage = { id: string; role: 'user' | 'assistant'; content: string; };
+type ChatMessage = { id: string; role: 'user' | 'assistant'; content: string };
 
 export default function SearchChat() {
   const { setApartments, setIsSearchActive } = useSearchResults();
   const [sessionId, setSessionId] = React.useState<string>('');
   const [messages, setMessages] = React.useState<ChatMessage[]>([
-    { id: 'sys', role: 'assistant', content: 'Hi! Tell me what you need and I will narrow apartments. You can mention city, dates, guests.' },
+    {
+      id: 'sys',
+      role: 'assistant',
+      content:
+        'Hi! Tell me what you need and I will narrow apartments. You can mention city, dates, guests.',
+    },
   ]);
   const [input, setInput] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -27,7 +32,7 @@ export default function SearchChat() {
         sessionStorage.setItem(key, id);
       }
       setSessionId(id);
-    } catch { }
+    } catch {}
   }, []);
 
   // Hydrate chat history from Sanity for this session
@@ -36,15 +41,21 @@ export default function SearchChat() {
       if (!sessionId) return;
       try {
         const res = await fetch(`/api/agent/chat?sessionId=${encodeURIComponent(sessionId)}`);
-        const data: { chat?: { messages?: Array<{ role?: 'user' | 'assistant'; message?: string; }>; }; } = await res.json();
+        const data: {
+          chat?: { messages?: Array<{ role?: 'user' | 'assistant'; message?: string }> };
+        } = await res.json();
         const msgs = data.chat?.messages ?? [];
         if (msgs.length > 0) {
           const mapped = msgs
-            .filter(m => m.message && (m.role === 'user' || m.role === 'assistant'))
-            .map(m => ({ id: crypto.randomUUID(), role: m.role as 'user' | 'assistant', content: m.message as string }));
-          setMessages(prev => [prev[0], ...mapped]);
+            .filter((m) => m.message && (m.role === 'user' || m.role === 'assistant'))
+            .map((m) => ({
+              id: crypto.randomUUID(),
+              role: m.role as 'user' | 'assistant',
+              content: m.message as string,
+            }));
+          setMessages((prev) => [prev[0], ...mapped]);
         }
-      } catch { }
+      } catch {}
     }
     void hydrate();
   }, [sessionId]);
@@ -62,7 +73,7 @@ export default function SearchChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId,
-          messages: next.map(m => ({ role: m.role, content: m.content })),
+          messages: next.map((m) => ({ role: m.role, content: m.content })),
         }),
       });
 
@@ -74,7 +85,10 @@ export default function SearchChat() {
       } = await res.json();
 
       const botText: string = data?.text || 'Sorry, something went wrong.';
-      setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', content: botText }]);
+      setMessages((prev) => [
+        ...prev,
+        { id: crypto.randomUUID(), role: 'assistant', content: botText },
+      ]);
 
       // Use apartments from dataAgent result
       const apartments = data?.dataAgentResult?.apartments;
@@ -83,7 +97,10 @@ export default function SearchChat() {
         setIsSearchActive(true);
       }
     } catch {
-      setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'assistant', content: 'Network error.' }]);
+      setMessages((prev) => [
+        ...prev,
+        { id: crypto.randomUUID(), role: 'assistant', content: 'Network error.' },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -93,10 +110,12 @@ export default function SearchChat() {
     <Card className="search-shadow border-gray-600 bg-white" data-testid="card-search-chat">
       <CardContent className="p-6">
         <div className="space-y-4">
-          <div className="h-64 overflow-y-auto space-y-2 pr-2">
+          <div className="h-64 space-y-2 overflow-y-auto pr-2">
             {messages.map((m) => (
               <div key={m.id} className={m.role === 'user' ? 'text-right' : 'text-left'}>
-                <div className={`inline-block px-3 py-2 rounded-xl ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
+                <div
+                  className={`inline-block rounded-xl px-3 py-2 ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}
+                >
                   {m.content}
                 </div>
               </div>
@@ -123,4 +142,3 @@ export default function SearchChat() {
     </Card>
   );
 }
-

@@ -1,24 +1,24 @@
-'use client'
+'use client';
 
-import * as React from "react"
-import { Button } from "@/components/ui/button"
+import * as React from 'react';
+import { Button } from '@/components/ui/button';
 
-type SupportedLang = 'en' | 'it'
+type SupportedLang = 'en' | 'it';
 
 type LanguageToggleProps = {
-  initialLang?: SupportedLang
-  onChange?: (lang: SupportedLang) => void
-}
+  initialLang?: SupportedLang;
+  onChange?: (lang: SupportedLang) => void;
+};
 
 export function LanguageToggle({ initialLang = 'en', onChange }: LanguageToggleProps) {
-  const [lang, setLang] = React.useState<SupportedLang>(initialLang)
+  const [lang, setLang] = React.useState<SupportedLang>(initialLang);
 
   const handleSelect = (next: SupportedLang) => {
-    setLang(next)
-    onChange?.(next)
+    setLang(next);
+    onChange?.(next);
     // placeholder side-effect
-    console.log('language changed to', next)
-  }
+    console.log('language changed to', next);
+  };
 
   return (
     <div className="flex items-center space-x-2" data-testid="language-toggle">
@@ -39,6 +39,5 @@ export function LanguageToggle({ initialLang = 'en', onChange }: LanguageToggleP
         IT
       </Button>
     </div>
-  )
+  );
 }
-

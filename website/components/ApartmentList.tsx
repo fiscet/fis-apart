@@ -9,7 +9,7 @@ type Currency = 'EUR' | 'USD' | 'GBP';
 type ApartmentListItem = {
   _id: string;
   name?: string;
-  location?: { city?: string; country?: string; };
+  location?: { city?: string; country?: string };
   imageUrl?: string;
   currentPrice?: number | null;
   currentCurrency?: Currency | null;
@@ -30,35 +30,46 @@ export function ApartmentList() {
       if (active) setLoading(false);
     }
     run();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [filters]);
 
   return (
-    <section className="py-16 px-4 bg-muted/50" data-testid="section-apartment-list">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
+    <section className="bg-muted/50 px-4 py-16" data-testid="section-apartment-list">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex items-center justify-between">
           <div>
-            <h3 className="text-3xl font-bold text-foreground" data-testid="text-apartment-list-title">
+            <h3
+              className="text-foreground text-3xl font-bold"
+              data-testid="text-apartment-list-title"
+            >
               Our Apartments
             </h3>
             <p className="text-muted-foreground" data-testid="text-apartment-list-subtitle"></p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {loading ? (
             Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="rounded-xl overflow-hidden border border-neutral-200 bg-card shadow-sm animate-pulse">
-                <div className="w-full h-48 bg-muted" />
-                <div className="p-4 space-y-3">
-                  <div className="h-3 w-1/3 bg-muted rounded" />
-                  <div className="h-4 w-2/3 bg-muted rounded" />
-                  <div className="h-6 w-1/2 bg-muted rounded" />
+              <div
+                key={i}
+                className="bg-card animate-pulse overflow-hidden rounded-xl border border-neutral-200 shadow-sm"
+              >
+                <div className="bg-muted h-48 w-full" />
+                <div className="space-y-3 p-4">
+                  <div className="bg-muted h-3 w-1/3 rounded" />
+                  <div className="bg-muted h-4 w-2/3 rounded" />
+                  <div className="bg-muted h-6 w-1/2 rounded" />
                 </div>
               </div>
             ))
           ) : apartments.length === 0 ? (
-            <div className="col-span-full text-center py-12 text-muted-foreground" data-testid="text-no-apartments">
+            <div
+              className="text-muted-foreground col-span-full py-12 text-center"
+              data-testid="text-no-apartments"
+            >
               No apartments available.
             </div>
           ) : (
@@ -73,4 +84,3 @@ export function ApartmentList() {
 }
 
 export default ApartmentList;
-

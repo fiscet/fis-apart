@@ -1,12 +1,11 @@
-import { ApartmentDetailsContainer } from "@/components/ApartmentDetailsContainer";
+import { ApartmentDetailsContainer } from '@/components/ApartmentDetailsContainer';
 
 // Next.js 15: params is a promise
-export default async function ApartmentPage({ params }: { params: Promise<{ slug: string; }>; }) {
+export default async function ApartmentPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   return (
-    <div className="px-4 py-10 max-w-5xl mx-auto">
+    <div className="mx-auto max-w-5xl px-4 py-10">
       <ApartmentDetailsContainer slug={slug} />
     </div>
   );
 }
-

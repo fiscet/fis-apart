@@ -14,7 +14,10 @@ export default function SearchSwitcher() {
         <Button variant={mode === 'chat' ? 'default' : 'outline'} onClick={() => setMode('chat')}>
           Chat
         </Button>
-        <Button variant={mode === 'filters' ? 'default' : 'outline'} onClick={() => setMode('filters')}>
+        <Button
+          variant={mode === 'filters' ? 'default' : 'outline'}
+          onClick={() => setMode('filters')}
+        >
           Filters
         </Button>
       </div>

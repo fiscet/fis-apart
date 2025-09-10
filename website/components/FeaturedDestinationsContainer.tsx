@@ -1,5 +1,5 @@
-import { client } from "@/lib/sanity/client";
-import { FeaturedDestinations, FeaturedCity } from "./FeaturedDestinations";
+import { client } from '@/lib/sanity/client';
+import { FeaturedDestinations, FeaturedCity } from './FeaturedDestinations';
 
 interface SanityCity {
   _id: string;
@@ -27,7 +27,7 @@ export async function FeaturedDestinationsContainer() {
 
   const featuredCities: FeaturedCity[] = (cities ?? []).map((c) => ({
     name: c.name,
-    image: c.image ?? "",
+    image: c.image ?? '',
     count: c.count ?? 0,
   }));
 

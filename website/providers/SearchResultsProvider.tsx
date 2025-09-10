@@ -13,7 +13,7 @@ type SearchResultsContextType = {
 
 const SearchResultsContext = createContext<SearchResultsContextType | undefined>(undefined);
 
-export function SearchResultsProvider({ children }: { children: React.ReactNode; }) {
+export function SearchResultsProvider({ children }: { children: React.ReactNode }) {
   const [apartments, setApartments] = useState<ApartmentData[]>([]);
   const [isSearchActive, setIsSearchActive] = useState(false);
 
@@ -30,11 +30,7 @@ export function SearchResultsProvider({ children }: { children: React.ReactNode;
     clearResults,
   };
 
-  return (
-    <SearchResultsContext.Provider value={value}>
-      {children}
-    </SearchResultsContext.Provider>
-  );
+  return <SearchResultsContext.Provider value={value}>{children}</SearchResultsContext.Provider>;
 }
 
 export function useSearchResults() {

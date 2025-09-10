@@ -1,8 +1,8 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { ApartmentListWithResults } from "./ApartmentListWithResults";
-import { useSearchResults } from "@/providers/SearchResultsProvider";
+import { ApartmentListWithResults } from './ApartmentListWithResults';
+import { useSearchResults } from '@/providers/SearchResultsProvider';
 
 interface HomeContentProps {
   featuredDestinations: ReactNode;
@@ -13,7 +13,7 @@ interface HomeContentProps {
 export function HomeContent({
   featuredDestinations,
   experienceCategories,
-  featuredApartments
+  featuredApartments,
 }: HomeContentProps) {
   const { isSearchActive } = useSearchResults();
 

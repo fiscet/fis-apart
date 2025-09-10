@@ -1,17 +1,20 @@
 'use client';
 
-import { ApartmentCard } from "./ApartmentCard";
-import { useSearchResults } from "@/providers/SearchResultsProvider";
+import { ApartmentCard } from './ApartmentCard';
+import { useSearchResults } from '@/providers/SearchResultsProvider';
 
 export function ApartmentListWithResults() {
   const { apartments, clearResults } = useSearchResults();
 
   return (
-    <section className="py-16 px-4 bg-muted/50" data-testid="section-apartment-list">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
+    <section className="bg-muted/50 px-4 py-16" data-testid="section-apartment-list">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex items-center justify-between">
           <div>
-            <h3 className="text-3xl font-bold text-foreground" data-testid="text-apartment-list-title">
+            <h3
+              className="text-foreground text-3xl font-bold"
+              data-testid="text-apartment-list-title"
+            >
               Search Results
             </h3>
             <p className="text-muted-foreground mt-2">
@@ -20,20 +23,20 @@ export function ApartmentListWithResults() {
           </div>
           <button
             onClick={clearResults}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground hover:text-foreground text-sm transition-colors"
           >
             Clear results
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {apartments.map((apartment) => (
             <ApartmentCard key={apartment._id} apartment={apartment} />
           ))}
         </div>
 
         {apartments.length === 0 && (
-          <div className="text-center py-12">
+          <div className="py-12 text-center">
             <p className="text-muted-foreground">No apartments found matching your criteria.</p>
           </div>
         )}

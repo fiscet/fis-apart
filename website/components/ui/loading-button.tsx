@@ -1,10 +1,10 @@
-import * as React from "react"
-import { Button, type ButtonProps } from "./button"
-import { cn } from "@/lib/utils"
+import * as React from 'react';
+import { Button, type ButtonProps } from './button';
+import { cn } from '@/lib/utils';
 
 export interface LoadingButtonProps extends ButtonProps {
-  isLoading?: boolean
-  spinnerClassName?: string
+  isLoading?: boolean;
+  spinnerClassName?: string;
 }
 
 export const LoadingButton = React.forwardRef<HTMLButtonElement, LoadingButtonProps>(
@@ -12,7 +12,7 @@ export const LoadingButton = React.forwardRef<HTMLButtonElement, LoadingButtonPr
     return (
       <Button
         ref={ref}
-        className={cn(isLoading && "cursor-wait opacity-90", className)}
+        className={cn(isLoading && 'cursor-wait opacity-90', className)}
         disabled={isLoading || disabled}
         aria-busy={isLoading ? true : undefined}
         {...props}
@@ -20,7 +20,7 @@ export const LoadingButton = React.forwardRef<HTMLButtonElement, LoadingButtonPr
         {isLoading ? (
           <>
             <svg
-              className={cn("mr-2 inline-block animate-spin", spinnerClassName)}
+              className={cn('mr-2 inline-block animate-spin', spinnerClassName)}
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -46,9 +46,7 @@ export const LoadingButton = React.forwardRef<HTMLButtonElement, LoadingButtonPr
           children
         )}
       </Button>
-    )
+    );
   }
-)
-LoadingButton.displayName = "LoadingButton"
-
-
+);
+LoadingButton.displayName = 'LoadingButton';

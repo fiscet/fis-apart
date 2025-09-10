@@ -10,5 +10,3 @@ export async function GET(req: NextRequest) {
   const data = await loadChatBySession(sessionId);
   return NextResponse.json({ chat: data });
 }
-
-

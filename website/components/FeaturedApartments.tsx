@@ -1,13 +1,13 @@
 'use client';
-import { ApartmentCard } from "./ApartmentCard";
+import { ApartmentCard } from './ApartmentCard';
 
-type Currency = "EUR" | "USD" | "GBP";
+type Currency = 'EUR' | 'USD' | 'GBP';
 
 interface FeaturedApartmentsProps {
   apartments: Array<{
     _id: string;
     name?: string;
-    location?: { city?: string; country?: string; };
+    location?: { city?: string; country?: string };
     imageUrl?: string;
     currentPrice?: number | null;
     currentCurrency?: Currency | null;
@@ -17,20 +17,29 @@ interface FeaturedApartmentsProps {
 
 export function FeaturedApartments({ apartments }: FeaturedApartmentsProps) {
   return (
-    <section className="py-16 px-4 bg-muted/50" data-testid="section-featured-apartments">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+    <section className="bg-muted/50 px-4 py-16" data-testid="section-featured-apartments">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-8 flex items-center justify-between">
           <div>
-            <h3 className="text-3xl font-bold text-foreground" data-testid="text-featured-apartments-title">
+            <h3
+              className="text-foreground text-3xl font-bold"
+              data-testid="text-featured-apartments-title"
+            >
               Featured Apartments
             </h3>
-            <p className="text-muted-foreground" data-testid="text-featured-apartments-subtitle"></p>
+            <p
+              className="text-muted-foreground"
+              data-testid="text-featured-apartments-subtitle"
+            ></p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {apartments.length === 0 ? (
-            <div className="col-span-full text-center py-12 text-muted-foreground" data-testid="text-no-featured-apartments">
+            <div
+              className="text-muted-foreground col-span-full py-12 text-center"
+              data-testid="text-no-featured-apartments"
+            >
               No featured apartments available.
             </div>
           ) : (
@@ -43,4 +52,3 @@ export function FeaturedApartments({ apartments }: FeaturedApartmentsProps) {
     </section>
   );
 }
-

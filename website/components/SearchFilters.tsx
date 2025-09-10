@@ -2,7 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { HeroInput } from '@/components/ui/hero-input';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
@@ -44,29 +50,34 @@ export default function SearchFilters() {
     try {
       const path = window.location.pathname;
       if (path !== '/apartments') router.push('/apartments');
-    } catch { }
+    } catch {}
   };
 
   return (
     <Card className="search-shadow border-gray-600 bg-white" data-testid="card-search-shared">
       <CardContent className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div>
-            <Label className="block text-sm font-medium text-muted-foreground mb-1">Location</Label>
-            <Select value={filters.city || ''} onValueChange={(value) => setFilters({ ...filters, city: value })}>
+            <Label className="text-muted-foreground mb-1 block text-sm font-medium">Location</Label>
+            <Select
+              value={filters.city || ''}
+              onValueChange={(value) => setFilters({ ...filters, city: value })}
+            >
               <SelectTrigger className="w-full" data-testid="select-city-shared">
                 <SelectValue placeholder="City" />
               </SelectTrigger>
               <SelectContent className="bg-white">
                 {CITIES.map((c) => (
-                  <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                  <SelectItem key={c.value} value={c.value}>
+                    {c.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
           <div>
-            <Label className="block text-sm font-medium text-muted-foreground mb-1">Check-in</Label>
+            <Label className="text-muted-foreground mb-1 block text-sm font-medium">Check-in</Label>
             <HeroInput
               type="date"
               value={filters.checkin || ''}
@@ -76,7 +87,9 @@ export default function SearchFilters() {
           </div>
 
           <div>
-            <Label className="block text-sm font-medium text-muted-foreground mb-1">Check-out</Label>
+            <Label className="text-muted-foreground mb-1 block text-sm font-medium">
+              Check-out
+            </Label>
             <HeroInput
               type="date"
               value={filters.checkout || ''}
@@ -86,7 +99,7 @@ export default function SearchFilters() {
           </div>
 
           <div>
-            <Label className="block text-sm font-medium text-muted-foreground mb-1">Guests</Label>
+            <Label className="text-muted-foreground mb-1 block text-sm font-medium">Guests</Label>
             <Select
               value={(filters.capacity ?? 1).toString()}
               onValueChange={(value) => setFilters({ ...filters, capacity: parseInt(value) })}
@@ -106,7 +119,7 @@ export default function SearchFilters() {
           <div className="md:col-span-4">
             <Button
               onClick={handleSearch}
-              className="w-full md:w-auto mt-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 rounded-xl font-semibold text-lg"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground mt-2 w-full rounded-xl px-8 py-4 text-lg font-semibold md:w-auto"
               data-testid="button-search-shared"
             >
               <Search className="mr-2 h-5 w-5" />

@@ -1,5 +1,5 @@
-import type { NextConfig } from "next";
-import { remoteImagePatterns } from "@/lib/images";
+import type { NextConfig } from 'next';
+import { remoteImagePatterns } from '@/lib/images';
 
 const nextConfig: NextConfig = {
   images: {
