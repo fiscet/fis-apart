@@ -1,5 +1,3 @@
-'use client';
-
 // No local search state needed; SearchFilters handles the logic
 // import { Card, CardContent } from "@/components/ui/card";
 import SearchChat from '@/components/SearchChat';
