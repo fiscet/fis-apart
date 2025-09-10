@@ -102,11 +102,23 @@ export default function SearchChat() {
 
       // Use apartments from dataAgent result
       const apartments = data?.dataAgentResult?.apartments;
-      if (apartments && Array.isArray(apartments) && apartments.length > 0) {
-        setApartments(apartments);
-        setIsSearchActive(true);
-        // Auto-compress chat when apartments are found
-        setIsExpanded(false);
+      if (apartments && Array.isArray(apartments)) {
+        if (apartments.length > 0) {
+          setApartments(apartments);
+          setIsSearchActive(true);
+          // Auto-compress chat when apartments are found
+          setIsExpanded(false);
+        } else {
+          // No apartments found - add a message to inform the user
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: crypto.randomUUID(),
+              role: 'assistant',
+              content: 'Sorry, I couldn\'t find any apartments matching your criteria. Please try adjusting your search parameters (different dates, location, or number of guests).'
+            },
+          ]);
+        }
       }
     } catch {
       setMessages((prev) => [
