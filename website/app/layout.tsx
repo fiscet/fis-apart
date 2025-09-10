@@ -16,10 +16,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} ${inter.variable}`}>
         <Providers>
-          <div className="bg-background min-h-screen">
+          <div className="bg-background min-h-screen w-full overflow-x-hidden">
             <Header />
 
-            {children}
+            <main className="w-full">
+              {children}
+            </main>
             <Footer />
           </div>
         </Providers>

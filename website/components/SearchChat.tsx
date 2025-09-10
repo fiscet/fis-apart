@@ -5,6 +5,7 @@ import { useSearchResults } from '@/providers/SearchResultsProvider';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { HeroInput } from '@/components/ui/hero-input';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import type { ApartmentData } from '@/types/apartment';
 
 type ChatMessage = { id: string; role: 'user' | 'assistant'; content: string };
@@ -22,6 +23,8 @@ export default function SearchChat() {
   ]);
   const [input, setInput] = React.useState('');
   const [loading, setLoading] = React.useState(false);
+  const [isExpanded, setIsExpanded] = React.useState(true); // Default to expanded view
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     try {
@@ -60,6 +63,13 @@ export default function SearchChat() {
     void hydrate();
   }, [sessionId]);
 
+  // Auto-scroll to bottom when new messages are added
+  React.useEffect(() => {
+    if (messagesEndRef.current && isExpanded) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isExpanded]);
+
   async function sendMessage() {
     const content = input.trim();
     if (!content) return;
@@ -92,9 +102,11 @@ export default function SearchChat() {
 
       // Use apartments from dataAgent result
       const apartments = data?.dataAgentResult?.apartments;
-      if (apartments && Array.isArray(apartments)) {
+      if (apartments && Array.isArray(apartments) && apartments.length > 0) {
         setApartments(apartments);
         setIsSearchActive(true);
+        // Auto-compress chat when apartments are found
+        setIsExpanded(false);
       }
     } catch {
       setMessages((prev) => [
@@ -107,21 +119,51 @@ export default function SearchChat() {
   }
 
   return (
-    <Card className="search-shadow border-gray-600 bg-white" data-testid="card-search-chat">
-      <CardContent className="p-6">
+    <Card className="search-shadow border-gray-600 bg-white w-full" data-testid="card-search-chat">
+      <CardContent className="p-4 md:p-6">
         <div className="space-y-4">
-          <div className="h-64 space-y-2 overflow-y-auto pr-2">
-            {messages.map((m) => (
-              <div key={m.id} className={m.role === 'user' ? 'text-right' : 'text-left'}>
-                <div
-                  className={`inline-block rounded-xl px-3 py-2 ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}
-                >
-                  {m.content}
-                </div>
-              </div>
-            ))}
+          {/* Toggle Button */}
+          <div className="flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center gap-1 text-gray-600 hover:text-gray-800"
+              data-testid="toggle-chat-view"
+            >
+              {isExpanded ? (
+                <>
+                  <ChevronUp className="h-4 w-4" />
+                  <span className="text-xs">Compress</span>
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4" />
+                  <span className="text-xs">Expand</span>
+                </>
+              )}
+            </Button>
           </div>
-          <div className="flex gap-2">
+
+          {/* Chat Messages - Only show when expanded */}
+          {isExpanded && (
+            <div className="h-64 space-y-2 overflow-y-auto pr-2 scroll-smooth">
+              {messages.map((m) => (
+                <div key={m.id} className={m.role === 'user' ? 'text-right' : 'text-left'}>
+                  <div
+                    className={`inline-block rounded-xl px-3 py-2 max-w-[80%] break-words ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}
+                  >
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+              {/* Invisible element to scroll to */}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+
+          {/* Input Section - Always visible */}
+          <div className="flex gap-2 w-full">
             <HeroInput
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -132,8 +174,9 @@ export default function SearchChat() {
                   if (!loading) void sendMessage();
                 }
               }}
+              className="flex-1"
             />
-            <Button disabled={loading} onClick={sendMessage} className="px-6">
+            <Button disabled={loading} onClick={sendMessage} className="px-4 md:px-6 flex-shrink-0">
               {loading ? 'Sending...' : 'Send'}
             </Button>
           </div>

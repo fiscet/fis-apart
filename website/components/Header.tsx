@@ -1,11 +1,9 @@
-'use client';
-
 import Link from 'next/link';
 import { UserMenu } from '@/components/UserMenu';
-import { Home } from 'lucide-react';
-import { LanguageToggle } from '@/components/LanguageToggle';
+import { Home, Mail } from 'lucide-react';
 
 export function Header() {
+
   return (
     <header className="border-border sticky top-0 z-50 border-b bg-white" data-testid="header">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -15,19 +13,17 @@ export function Header() {
               <Home className="text-primary mr-2 text-2xl" />
               <h1 className="text-foreground text-xl font-bold">VacanzaItalia</h1>
             </Link>
-            <nav className="hidden space-x-6 md:flex">
-              <Link
-                href="/contact"
-                className="text-foreground hover:text-primary transition-colors"
-                data-testid="link-contact"
-              >
-                Contacts
-              </Link>
-            </nav>
+            {/* Desktop contact link removed - using mobile icon for all breakpoints */}
           </div>
 
-          <div className="flex items-center space-x-4">
-            <LanguageToggle />
+          <div className="flex items-center space-x-2">
+            <Link
+              href="/contact"
+              className="transition-colors p-1 animate-pulse"
+              data-testid="link-contact-mobile"
+            >
+              <Mail className="h-6 w-6 text-blue-600" />
+            </Link>
             <UserMenu />
           </div>
         </div>
