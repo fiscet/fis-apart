@@ -2,7 +2,7 @@
 
 // No local search state needed; SearchFilters handles the logic
 // import { Card, CardContent } from "@/components/ui/card";
-import SearchSwitcher from '@/components/SearchSwitcher';
+import SearchChat from '@/components/SearchChat';
 
 export function HeroSection() {
   return (
@@ -22,7 +22,7 @@ export function HeroSection() {
         </p>
 
         {/* Search Component */}
-        <SearchSwitcher />
+        <SearchChat />
       </div>
     </section>
   );

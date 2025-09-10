@@ -2,6 +2,7 @@
 
 import { ApartmentCard } from './ApartmentCard';
 import { useSearchResults } from '@/providers/SearchResultsProvider';
+import { Button } from './ui/button';
 
 export function ApartmentListWithResults() {
   const { apartments, clearResults } = useSearchResults();
@@ -21,12 +22,12 @@ export function ApartmentListWithResults() {
               Found {apartments.length} apartment{apartments.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <button
+          <Button
             onClick={clearResults}
-            className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-          >
+            variant="outline"
+            className="bg-red-500 text-white hover:text-red-600 text-sm">
             Clear results
-          </button>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
