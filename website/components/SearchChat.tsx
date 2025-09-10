@@ -24,7 +24,7 @@ export default function SearchChat() {
   const [input, setInput] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [isExpanded, setIsExpanded] = React.useState(true); // Default to expanded view
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const messagesContainerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     try {
@@ -65,8 +65,8 @@ export default function SearchChat() {
 
   // Auto-scroll to bottom when new messages are added
   React.useEffect(() => {
-    if (messagesEndRef.current && isExpanded) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current && isExpanded) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, [messages, isExpanded]);
 
@@ -147,7 +147,10 @@ export default function SearchChat() {
 
           {/* Chat Messages - Only show when expanded */}
           {isExpanded && (
-            <div className="h-64 space-y-2 overflow-y-auto pr-2 scroll-smooth">
+            <div
+              ref={messagesContainerRef}
+              className="h-64 space-y-2 overflow-y-auto pr-2 scroll-smooth"
+            >
               {messages.map((m) => (
                 <div key={m.id} className={m.role === 'user' ? 'text-right' : 'text-left'}>
                   <div
@@ -157,8 +160,6 @@ export default function SearchChat() {
                   </div>
                 </div>
               ))}
-              {/* Invisible element to scroll to */}
-              <div ref={messagesEndRef} />
             </div>
           )}
 

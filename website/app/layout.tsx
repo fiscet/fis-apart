@@ -16,7 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} ${inter.variable}`}>
         <Providers>
-          <div className="bg-background min-h-screen w-full overflow-x-hidden">
+          <div className="bg-background min-h-screen w-full">
             <Header />
 
             <main className="w-full">
