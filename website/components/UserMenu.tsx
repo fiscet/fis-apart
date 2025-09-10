@@ -10,9 +10,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bell, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function UserMenu() {
+  const isMobile = useIsMobile();
   const isAuthenticated = true;
   const user = {
     firstName: 'John',
@@ -32,26 +34,26 @@ export function UserMenu() {
   if (isAuthenticated && user) {
     return (
       <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" data-testid="button-notifications">
-          <Bell className="h-4 w-4" />
-        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="flex items-center space-x-2"
+              className={`flex items-center ${isMobile ? 'space-x-1 p-1' : 'space-x-2'}`}
               data-testid="button-user-menu"
             >
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user.profileImageUrl || undefined} />
-                <AvatarFallback>
-                  {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className={isMobile ? "h-7 w-7" : "h-8 w-8"}>
+                  <AvatarImage src={user.profileImageUrl || undefined} />
+                  <AvatarFallback className={isMobile ? "text-xs" : ""}>
+                    {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
+                  </AvatarFallback>
+                </Avatar>
+                  <div className="absolute -top-0.5 -right-0.5 h-2 w-2 bg-red-500 rounded-full border border-white"></div>
+              </div>
               <span className="hidden text-sm font-medium sm:inline" data-testid="text-username">
                 {user.firstName} {user.lastName}
               </span>
-              <ChevronDown className="h-4 w-4" />
+              {!isMobile && <ChevronDown className="h-4 w-4" />}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-white">

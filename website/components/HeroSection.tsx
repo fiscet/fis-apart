@@ -7,10 +7,10 @@ import SearchChat from '@/components/SearchChat';
 export function HeroSection() {
   return (
     <section
-      className="hero-section from-primary to-background bg-gradient-to-br px-4 py-20"
+      className="hero-section from-primary to-background bg-gradient-to-br px-4 py-20 w-full"
       data-testid="hero-section"
     >
-      <div className="mx-auto max-w-4xl text-center">
+      <div className="mx-auto max-w-4xl text-center w-full">
         <h2
           className="text-primary-foreground mb-6 text-4xl font-bold md:text-6xl"
           data-testid="text-hero-title"
@@ -22,7 +22,9 @@ export function HeroSection() {
         </p>
 
         {/* Search Component */}
-        <SearchChat />
+        <div className="w-full">
+          <SearchChat />
+        </div>
       </div>
     </section>
   );
