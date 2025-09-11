@@ -4,30 +4,24 @@ import { openai } from '@ai-sdk/openai';
 import { searchAgent } from '@/lib/mastra/agents/searchAgent';
 import { dataAgent } from '@/lib/mastra/agents/dataAgent';
 import type { ApartmentListFilters } from '@/providers/ApartmentFiltersProvider';
-import { saveChatMessage } from '@/lib/sanity/actions';
 import type { ApartmentData } from '@/types/apartment';
 
 const BodySchema = z.object({
-  messages: z
-    .array(
-      z.object({
-        role: z.enum(['user', 'assistant', 'system']).default('user'),
-        content: z.string(),
-      })
-    )
-    .or(z.string()),
-  sessionId: z.string().optional(),
-  threadId: z.string().optional(),
-  resourceId: z.string().optional(),
+  message: z.string(),
+  threadId: z.string(),
+  resourceId: z.string(),
 });
 
 export async function POST(req: NextRequest) {
   try {
     const json = await req.json();
-    const { messages, sessionId, threadId, resourceId } = BodySchema.parse(json);
+    console.log('Received request body:', json);
 
-    const response = await searchAgent.generate(messages, {
-      memory: threadId && resourceId ? { thread: threadId, resource: resourceId } : undefined,
+    const { message, threadId, resourceId } = BodySchema.parse(json);
+    console.log('Parsed values:', { message, threadId, resourceId });
+
+    const response = await searchAgent.generate(message, {
+      memory: { thread: threadId, resource: resourceId },
       maxSteps: 3,
       structuredOutput: {
         schema: z.object({
@@ -77,25 +71,6 @@ export async function POST(req: NextRequest) {
       }
 
       dataAgentResult = { text: dataRes.text, toolCalls: dataRes.toolCalls, apartments };
-    }
-
-    // Persist chat messages if sessionId present
-    if (sessionId) {
-      try {
-        const lastUser = Array.isArray(messages)
-          ? messages[messages.length - 1]
-          : (undefined as { role: 'user' | 'assistant' | 'system'; content: string } | undefined);
-        if (lastUser && lastUser.role === 'user') {
-          await saveChatMessage({ sessionId, role: 'user', message: lastUser.content });
-        }
-        await saveChatMessage({
-          sessionId,
-          role: 'assistant',
-          message: text,
-          context: filters,
-          result: dataAgentResult,
-        });
-      } catch {}
     }
 
     return NextResponse.json({ text, toolCalls: response.toolCalls, filters, dataAgentResult });

@@ -12,7 +12,8 @@ type ChatMessage = { id: string; role: 'user' | 'assistant'; content: string };
 
 export default function SearchChat() {
   const { setApartments, setIsSearchActive } = useSearchResults();
-  const [sessionId, setSessionId] = React.useState<string>('');
+  const [threadId, setThreadId] = React.useState<string>('');
+  const [resourceId, setResourceId] = React.useState<string>('');
   const [messages, setMessages] = React.useState<ChatMessage[]>([
     {
       id: 'sys',
@@ -28,40 +29,52 @@ export default function SearchChat() {
 
   React.useEffect(() => {
     try {
-      const key = 'chat-session-id';
-      let id = sessionStorage.getItem(key);
-      if (!id) {
-        id = crypto.randomUUID();
-        sessionStorage.setItem(key, id);
+      const threadKey = 'chat-thread-id';
+      const resourceKey = 'chat-resource-id';
+
+      let thread = sessionStorage.getItem(threadKey);
+      let resource = sessionStorage.getItem(resourceKey);
+
+      if (!thread) {
+        thread = crypto.randomUUID();
+        sessionStorage.setItem(threadKey, thread);
       }
-      setSessionId(id);
+      if (!resource) {
+        resource = crypto.randomUUID();
+        sessionStorage.setItem(resourceKey, resource);
+      }
+
+      setThreadId(thread);
+      setResourceId(resource);
     } catch {}
   }, []);
 
-  // Hydrate chat history from Sanity for this session
+  // Load chat history from Mastra memory when threadId and resourceId are available
   React.useEffect(() => {
-    async function hydrate() {
-      if (!sessionId) return;
+    async function loadChatHistory() {
+      if (!threadId || !resourceId) return;
+
       try {
-        const res = await fetch(`/api/agent/chat?sessionId=${encodeURIComponent(sessionId)}`);
-        const data: {
-          chat?: { messages?: Array<{ role?: 'user' | 'assistant'; message?: string }> };
-        } = await res.json();
-        const msgs = data.chat?.messages ?? [];
-        if (msgs.length > 0) {
-          const mapped = msgs
-            .filter((m) => m.message && (m.role === 'user' || m.role === 'assistant'))
-            .map((m) => ({
-              id: crypto.randomUUID(),
-              role: m.role as 'user' | 'assistant',
-              content: m.message as string,
-            }));
-          setMessages((prev) => [prev[0], ...mapped]);
+        const res = await fetch(`/api/agent/chat?threadId=${encodeURIComponent(threadId)}&resourceId=${encodeURIComponent(resourceId)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const historyMessages = data.messages || [];
+
+          if (historyMessages.length > 0) {
+            // Add system message + history messages
+            setMessages(prev => [
+              prev[0], // Keep the system message
+              ...historyMessages
+            ]);
+          }
         }
-      } catch {}
+      } catch (error) {
+        console.log('Could not load chat history:', error);
+      }
     }
-    void hydrate();
-  }, [sessionId]);
+
+    loadChatHistory();
+  }, [threadId, resourceId]);
 
   // Auto-scroll to bottom when new messages are added
   React.useEffect(() => {
@@ -72,20 +85,37 @@ export default function SearchChat() {
 
   async function sendMessage() {
     const content = input.trim();
-    if (!content) return;
-    const next = [...messages, { id: crypto.randomUUID(), role: 'user' as const, content }];
-    setMessages(next);
+    if (!content || !threadId || !resourceId) {
+      console.log('Missing required values:', { content, threadId, resourceId });
+      return;
+    }
+
+    // Add user message to local state
+    const userMessage = { id: crypto.randomUUID(), role: 'user' as const, content };
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
+
     try {
+      const requestBody = {
+        message: content,
+        threadId,
+        resourceId,
+      };
+
+      console.log('Sending request:', requestBody);
+
       const res = await fetch('/api/agent/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          messages: next.map((m) => ({ role: m.role, content: m.content })),
-        }),
+        body: JSON.stringify(requestBody),
       });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error('API Error:', errorData);
+        throw new Error(`API Error: ${res.status} - ${errorData.error || 'Unknown error'}`);
+      }
 
       const data: {
         text?: string;
@@ -94,6 +124,7 @@ export default function SearchChat() {
         };
       } = await res.json();
 
+      console.log('API Response:', data);
       const botText: string = data?.text || 'Sorry, something went wrong.';
       setMessages((prev) => [
         ...prev,

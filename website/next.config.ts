@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: remoteImagePatterns,
   },
+  serverExternalPackages: ["@mastra/*"],
 };
 
 export default nextConfig;
