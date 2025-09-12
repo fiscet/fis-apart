@@ -12,10 +12,15 @@ const GetSchema = z.object({
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const { threadId, resourceId } = GetSchema.parse({
-      threadId: searchParams.get('threadId'),
-      resourceId: searchParams.get('resourceId'),
-    });
+    const threadId = searchParams.get('threadId');
+    const resourceId = searchParams.get('resourceId');
+
+    // Validate required parameters
+    if (!threadId || !resourceId) {
+      return NextResponse.json({
+        error: 'Missing required parameters: threadId and resourceId'
+      }, { status: 400 });
+    }
 
     // Get memory instance and retrieve messages
     const memory = await searchAgent.getMemory();
@@ -41,6 +46,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ messages: formattedMessages });
   } catch (e: unknown) {
+    console.error('Chat API error:', e);
     const message = e instanceof Error ? e.message : 'Bad Request';
     return NextResponse.json({ error: message }, { status: 400 });
   }

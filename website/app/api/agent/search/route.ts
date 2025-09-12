@@ -15,66 +15,81 @@ const BodySchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const json = await req.json();
-    console.log('Received request body:', json);
 
     const { message, threadId, resourceId } = BodySchema.parse(json);
-    console.log('Parsed values:', { message, threadId, resourceId });
 
-    const response = await searchAgent.generate(message, {
+    // First, get structured filters from searchAgent
+    console.log('/api/search -> Starting searchAgent generation with message:', message);
+
+    let text = '';
+    let filters: Partial<ApartmentListFilters> | undefined = undefined;
+
+    // Use regular generation to ensure we get text responses
+    const searchResponse = await searchAgent.generate(message, {
       memory: { thread: threadId, resource: resourceId },
       maxSteps: 3,
-      structuredOutput: {
-        schema: z.object({
-          city: z
-            .string()
-            .optional()
-            .describe('The city where the user wants to find an apartment'),
-          capacity: z.number().optional().describe('Number of guests/people'),
-          checkin: z.string().optional().describe('Check-in date in YYYY-MM-DD format'),
-          checkout: z.string().optional().describe('Check-out date in YYYY-MM-DD format'),
-        }),
-        model: openai(process.env.OPENAI_MODEL || 'gpt-4o-mini'),
-        errorStrategy: 'warn',
-      },
+      temperature: 0.3,
     });
 
-    const text = response.text ?? '';
-    const filters: Partial<ApartmentListFilters> | undefined = response.object;
+    text = searchResponse.text ?? '';
+    filters = undefined; // We'll extract filters from the text response
 
+    console.log('/api/search -> searchResponse.text:', text);
+    console.log('/api/search -> searchResponse keys:', Object.keys(searchResponse));
+
+    // Then, use dataAgent to search apartments using RAG
     type DataAgentResult = { text?: string; toolCalls?: unknown[]; apartments?: ApartmentData[] };
     let dataAgentResult: DataAgentResult | undefined = undefined;
-    if (filters && typeof filters === 'object') {
-      // Pass filters to data agent which will use tool to fetch data
-      const dataRes = await dataAgent.generate(
-        [
-          { role: 'system', content: 'Use the tool with the provided filters.' },
-          { role: 'user', content: JSON.stringify(filters) },
-        ],
-        {
-          toolChoice: 'required',
-          maxSteps: 3,
-        }
-      );
 
-      // Extract apartments from tool results (Mastra places them under toolResults[].result)
-      let apartments: ApartmentData[] = [];
-      type ToolResult = { toolName?: string; result?: { apartments?: ApartmentData[] } };
-      const toolResults = (dataRes as { toolResults?: ToolResult[] }).toolResults;
-      if (Array.isArray(toolResults)) {
-        const first = toolResults.find(
-          (tr) =>
-            tr?.toolName === 'fetchApartmentsByFilters' && Array.isArray(tr?.result?.apartments)
-        );
-        if (first?.result?.apartments) {
-          apartments = first.result.apartments;
-        }
-      }
+    // Create a more specific search query using the original message
+    let searchQuery = message;
 
-      dataAgentResult = { text: dataRes.text, toolCalls: dataRes.toolCalls, apartments };
+    // Extract city from message if mentioned (look for "in [city]" pattern)
+    const cityMatch = message.match(/\bin\s+([a-zA-Z]+)\b/i);
+    if (cityMatch) {
+      searchQuery = `apartments in ${cityMatch[1]}`;
     }
 
-    return NextResponse.json({ text, toolCalls: response.toolCalls, filters, dataAgentResult });
+    console.log('/api/search -> Using search query:', searchQuery);
+
+    // Always call dataAgent with the enhanced search query for RAG search
+    const dataRes = await dataAgent.generate(
+      [
+        { role: 'system', content: 'Use the rag_search tool to find apartments based on the user query.' },
+        { role: 'user', content: searchQuery },
+      ],
+      {
+        toolChoice: 'required',
+        maxSteps: 3,
+        temperature: 0.3, // Lower temperature for more consistent data retrieval
+      }
+    );
+
+    // Extract apartments from RAG search results
+    let apartments: ApartmentData[] = [];
+    type ToolResult = { toolName?: string; result?: { apartments?: ApartmentData[]; }; };
+    const toolResults = (dataRes as { toolResults?: ToolResult[]; }).toolResults;
+    if (Array.isArray(toolResults)) {
+      const first = toolResults.find(
+        (tr) =>
+          tr?.toolName === 'ragSearch' && Array.isArray(tr?.result?.apartments)
+      );
+      if (first?.result?.apartments) {
+        apartments = first.result.apartments;
+      }
+    }
+
+    dataAgentResult = { text: dataRes.text, toolCalls: dataRes.toolCalls, apartments };
+
+    console.log('/api/search -> Final response data:', {
+      text: text.substring(0, 100) + '...',
+      filters,
+      apartmentsCount: dataAgentResult?.apartments?.length || 0
+    });
+
+    return NextResponse.json({ text, toolCalls: searchResponse.toolCalls, filters, dataAgentResult });
   } catch (e: unknown) {
+    console.error('API Error details:', e);
     const message = e instanceof Error ? e.message : 'Bad Request';
     return NextResponse.json({ error: message }, { status: 400 });
   }

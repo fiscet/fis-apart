@@ -1,8 +1,9 @@
 'use server';
 
 import { client } from '@/lib/sanity/client';
-import { QUERY_ALL_APARTMENTS, QUERY_ALL_APARTMENTS_FILTERED } from '@/lib/sanity/queries';
+import { QUERY_ALL_APARTMENTS, QUERY_ALL_APARTMENTS_FILTERED, QUERY_APARTMENTS_FOR_RAG } from '@/lib/sanity/queries';
 import type { ApartmentListFilters } from '@/providers/ApartmentFiltersProvider';
+import type { ApartmentDataComplete } from '@/types/apartment';
 
 type ApartmentListItem = {
   _id: string;
@@ -80,6 +81,18 @@ export async function saveChatMessage(input: {
     });
   } catch (error) {
     console.error('Failed to save chat message:', error);
+  }
+}
+
+export async function getApartmentsForRAG(): Promise<ApartmentDataComplete[]> {
+  try {
+    console.log('Fetching apartments for RAG indexing...');
+    const data = await client.fetch<ApartmentDataComplete[]>(QUERY_APARTMENTS_FOR_RAG);
+    console.log(`Fetched ${data.length} apartments for RAG indexing`);
+    return data;
+  } catch (error) {
+    console.error('Error fetching apartments for RAG:', error);
+    return [];
   }
 }
 

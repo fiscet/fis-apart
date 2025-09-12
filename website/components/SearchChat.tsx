@@ -137,8 +137,6 @@ export default function SearchChat() {
         if (apartments.length > 0) {
           setApartments(apartments);
           setIsSearchActive(true);
-          // Auto-compress chat when apartments are found
-          setIsExpanded(false);
         } else {
           // No apartments found - add a message to inform the user
           setMessages((prev) => [
