@@ -38,30 +38,8 @@ export default function SearchChat() {
     } catch {}
   }, []);
 
-  // Hydrate chat history from Sanity for this session
-  React.useEffect(() => {
-    async function hydrate() {
-      if (!sessionId) return;
-      try {
-        const res = await fetch(`/api/agent/chat?sessionId=${encodeURIComponent(sessionId)}`);
-        const data: {
-          chat?: { messages?: Array<{ role?: 'user' | 'assistant'; message?: string }> };
-        } = await res.json();
-        const msgs = data.chat?.messages ?? [];
-        if (msgs.length > 0) {
-          const mapped = msgs
-            .filter((m) => m.message && (m.role === 'user' || m.role === 'assistant'))
-            .map((m) => ({
-              id: crypto.randomUUID(),
-              role: m.role as 'user' | 'assistant',
-              content: m.message as string,
-            }));
-          setMessages((prev) => [prev[0], ...mapped]);
-        }
-      } catch {}
-    }
-    void hydrate();
-  }, [sessionId]);
+  // Note: Chat history is now automatically handled by Mastra's Memory system
+  // No need to manually load chat history as it's persisted in Upstash
 
   // Auto-scroll to bottom when new messages are added
   React.useEffect(() => {
@@ -82,7 +60,8 @@ export default function SearchChat() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sessionId,
+          threadId: sessionId,
+          resourceId: 'user-' + sessionId,
           messages: next.map((m) => ({ role: m.role, content: m.content })),
         }),
       });
@@ -106,8 +85,6 @@ export default function SearchChat() {
         if (apartments.length > 0) {
           setApartments(apartments);
           setIsSearchActive(true);
-          // Auto-compress chat when apartments are found
-          setIsExpanded(false);
         } else {
           // No apartments found - add a message to inform the user
           setMessages((prev) => [

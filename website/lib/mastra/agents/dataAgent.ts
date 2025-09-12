@@ -1,6 +1,7 @@
 import { Agent } from '@mastra/core/agent';
 import { openai } from '@ai-sdk/openai';
 import { fetchApartmentsByFilters } from '@/lib/mastra/tools/fetchApartmentsByFilters';
+import { memory } from '@/lib/mastra/memory';
 
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
@@ -12,6 +13,7 @@ export const dataAgent = new Agent({
     Return the apartments data from the tool result.
     Be aware today is ${new Date().toISOString()}`,
   model: openai(DEFAULT_MODEL),
+  memory,
   tools: {
     fetchApartmentsByFilters,
   },

@@ -53,23 +53,6 @@ export type ApartmentImage = {
   isMain?: boolean;
 };
 
-export type ChatWithAgents = {
-  _id: string;
-  _type: "chatWithAgents";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  sessionId?: string;
-  messages?: Array<{
-    role?: "user" | "assistant";
-    message?: string;
-    context?: string;
-    result?: string;
-    _type: "chatItem";
-    _key: string;
-  }>;
-};
-
 export type VerificationToken = {
   _id: string;
   _type: "verificationToken";
@@ -437,5 +420,5 @@ export type SanityAssetSourceData = {
   url?: string;
 };
 
-export type AllSanitySchemaTypes = PriceRange | ApartmentAmenity | ApartmentImage | ChatWithAgents | VerificationToken | Account | User | AvailabilityRequest | Amenity | Apartment | ExperienceCategory | City | Location | MediaTag | SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityImageHotspot | SanityImageCrop | SanityFileAsset | SanityImageAsset | SanityImageMetadata | Geopoint | Slug | SanityAssetSourceData;
+export type AllSanitySchemaTypes = PriceRange | ApartmentAmenity | ApartmentImage  | VerificationToken | Account | User | AvailabilityRequest | Amenity | Apartment | ExperienceCategory | City | Location | MediaTag | SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityImageHotspot | SanityImageCrop | SanityFileAsset | SanityImageAsset | SanityImageMetadata | Geopoint | Slug | SanityAssetSourceData;
 export declare const internalGroqTypeReferenceTo: unique symbol;

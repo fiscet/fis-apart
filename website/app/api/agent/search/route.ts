@@ -4,7 +4,6 @@ import { openai } from '@ai-sdk/openai';
 import { searchAgent } from '@/lib/mastra/agents/searchAgent';
 import { dataAgent } from '@/lib/mastra/agents/dataAgent';
 import type { ApartmentListFilters } from '@/providers/ApartmentFiltersProvider';
-import { saveChatMessage } from '@/lib/sanity/actions';
 import type { ApartmentData } from '@/types/apartment';
 
 const BodySchema = z.object({
@@ -16,7 +15,6 @@ const BodySchema = z.object({
       })
     )
     .or(z.string()),
-  sessionId: z.string().optional(),
   threadId: z.string().optional(),
   resourceId: z.string().optional(),
 });
@@ -24,7 +22,14 @@ const BodySchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const json = await req.json();
-    const { messages, sessionId, threadId, resourceId } = BodySchema.parse(json);
+    const { messages, threadId, resourceId } = BodySchema.parse(json);
+
+    console.log('🔍 Memory Debug:', {
+      threadId,
+      resourceId,
+      messagesCount: Array.isArray(messages) ? messages.length : 1,
+      memoryConfig: threadId && resourceId ? { thread: threadId, resource: resourceId } : 'No memory config',
+    });
 
     const response = await searchAgent.generate(messages, {
       memory: threadId && resourceId ? { thread: threadId, resource: resourceId } : undefined,
@@ -49,7 +54,12 @@ export async function POST(req: NextRequest) {
 
     type DataAgentResult = { text?: string; toolCalls?: unknown[]; apartments?: ApartmentData[] };
     let dataAgentResult: DataAgentResult | undefined = undefined;
-    if (filters && typeof filters === 'object') {
+
+    // Only call data agent if we have meaningful search criteria
+    const hasSearchCriteria = filters && typeof filters === 'object' &&
+      (filters.city || filters.capacity || filters.checkin || filters.checkout);
+
+    if (hasSearchCriteria) {
       // Pass filters to data agent which will use tool to fetch data
       const dataRes = await dataAgent.generate(
         [
@@ -57,6 +67,7 @@ export async function POST(req: NextRequest) {
           { role: 'user', content: JSON.stringify(filters) },
         ],
         {
+          memory: threadId && resourceId ? { thread: threadId, resource: resourceId } : undefined,
           toolChoice: 'required',
           maxSteps: 3,
         }
@@ -79,24 +90,7 @@ export async function POST(req: NextRequest) {
       dataAgentResult = { text: dataRes.text, toolCalls: dataRes.toolCalls, apartments };
     }
 
-    // Persist chat messages if sessionId present
-    if (sessionId) {
-      try {
-        const lastUser = Array.isArray(messages)
-          ? messages[messages.length - 1]
-          : (undefined as { role: 'user' | 'assistant' | 'system'; content: string } | undefined);
-        if (lastUser && lastUser.role === 'user') {
-          await saveChatMessage({ sessionId, role: 'user', message: lastUser.content });
-        }
-        await saveChatMessage({
-          sessionId,
-          role: 'assistant',
-          message: text,
-          context: filters,
-          result: dataAgentResult,
-        });
-      } catch {}
-    }
+    // Messages are automatically saved by Mastra's Memory system when using agents
 
     return NextResponse.json({ text, toolCalls: response.toolCalls, filters, dataAgentResult });
   } catch (e: unknown) {
