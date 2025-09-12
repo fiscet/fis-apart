@@ -2,29 +2,57 @@
 
 import React from 'react';
 import { useSearchResults } from '@/providers/SearchResultsProvider';
+import { useRuntimeContext } from '@/providers/RuntimeContextProvider';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { HeroInput } from '@/components/ui/hero-input';
 import { ChevronUp, ChevronDown } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import type { ApartmentData } from '@/types/apartment';
 
 type ChatMessage = { id: string; role: 'user' | 'assistant'; content: string };
 
 export default function SearchChat() {
   const { setApartments, setIsSearchActive } = useSearchResults();
+  const { runtimeContext } = useRuntimeContext();
   const [sessionId, setSessionId] = React.useState<string>('');
-  const [messages, setMessages] = React.useState<ChatMessage[]>([
-    {
-      id: 'sys',
-      role: 'assistant',
-      content:
-        'Hi! Tell me what you need and I will narrow apartments. You can mention city, dates, guests.',
-    },
-  ]);
+
+  // Create dynamic initial message with available options
+  const initialMessage = React.useMemo(() => {
+    const cities = runtimeContext.get('available-cities') || [];
+    const categories = runtimeContext.get('available-experience-categories') || [];
+
+    const citiesList = cities.map(city => city.name ?? '').join(', ');
+    const categoriesList = categories.map(category => category.name ?? '').join(', ');
+
+    return `# Welcome! 🏠
+
+Tell me what you need and I will narrow apartments for you. You can mention:
+
+- **City**
+  ${citiesList}
+- **Experience type** (what you want to do)
+  ${categoriesList}
+- **Dates** (check-in and check-out)
+- **Number of guests**
+
+Just tell me your preferences and I'll find the perfect apartment for you! 🎯`;
+  }, [runtimeContext]);
+
+  const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [input, setInput] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [isExpanded, setIsExpanded] = React.useState(true); // Default to expanded view
   const messagesContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Set initial message when component mounts
+  React.useEffect(() => {
+    setMessages([{
+      id: 'sys',
+      role: 'assistant',
+      content: initialMessage,
+    }]);
+  }, [initialMessage]);
 
   React.useEffect(() => {
     try {
@@ -63,6 +91,10 @@ export default function SearchChat() {
           threadId: sessionId,
           resourceId: 'user-' + sessionId,
           messages: next.map((m) => ({ role: m.role, content: m.content })),
+          runtimeContext: {
+            'available-cities': runtimeContext.get('available-cities'),
+            'available-experience-categories': runtimeContext.get('available-experience-categories'),
+          },
         }),
       });
 
@@ -145,7 +177,24 @@ export default function SearchChat() {
                   <div
                     className={`inline-block rounded-xl px-3 py-2 max-w-[80%] break-words ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}
                   >
-                    {m.content}
+                    {m.role === 'assistant' ? (
+                      <div className="prose prose-sm max-w-none prose-headings:text-current prose-p:text-current prose-strong:text-current prose-ul:text-current prose-li:text-current">
+                        <ReactMarkdown
+                          components={{
+                            h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
+                            h2: ({ children }) => <h2 className="text-base font-semibold mb-2 mt-3">{children}</h2>,
+                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                            ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+                            li: ({ children }) => <li className="text-sm">{children}</li>,
+                            strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                          }}
+                        >
+                          {m.content}
+                        </ReactMarkdown>
+                      </div>
+                    ) : (
+                      m.content
+                    )}
                   </div>
                 </div>
               ))}
@@ -157,7 +206,8 @@ export default function SearchChat() {
             <HeroInput
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about apartments..."
+              placeholder={loading ? "Searching..." : "Ask about apartments..."}
+              disabled={loading}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();

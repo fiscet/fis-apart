@@ -45,9 +45,18 @@ export const QUERY_ALL_APARTMENTS = `*[_type == "apartment" && active == true]{
   capacity,
 } | order(_createdAt desc)`;
 
-// Filtered by optional city (string match), capacity (min guests needed), amenities (string[] names)
+// Filtered by optional city (string match) OR experience category (string match), capacity (min guests needed), amenities (string[] names)
 export const QUERY_ALL_APARTMENTS_FILTERED = `*[_type == "apartment" && active == true
-  && (!defined($city) || $city == "" || location.city match $city)
+  && (
+    // No filters specified - return all apartments
+    ((!defined($city) || $city == "") && (!defined($experienceCategory) || $experienceCategory == "")) ||
+    // City filter only
+    ((defined($city) && $city != "") && (!defined($experienceCategory) || $experienceCategory == "") && location.city match $city) ||
+    // Experience category filter only
+    ((!defined($city) || $city == "") && (defined($experienceCategory) && $experienceCategory != "") && experienceCategory->name match $experienceCategory) ||
+    // Both filters - match either city OR experience category
+    ((defined($city) && $city != "") && (defined($experienceCategory) && $experienceCategory != "") && (location.city match $city || experienceCategory->name match $experienceCategory))
+  )
   && (!defined($capacity) || ($capacity >= coalesce(capacity.minGuests, 0) && $capacity <= coalesce(capacity.maxGuests, 999)))
 ]{
   _id,
@@ -104,3 +113,19 @@ export const QUERY_APARTMENT_DETAILS = `*[_type == "apartment" && slug.current =
   "amenities": amenities[]->{ _id, name, icon },
   description
 }`;
+
+export const QUERY_EXPERIENCE_CATEGORIES = `*[_type == "experienceCategory"]{
+  _id,
+  name,
+  "slug": slug.current,
+  description
+} | order(name asc)`;
+
+export const QUERY_CITIES = `*[_type == "city" && active == true]{
+  _id,
+  name,
+  "slug": slug.current,
+  region,
+  country,
+  description
+} | order(name asc)`;

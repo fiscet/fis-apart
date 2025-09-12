@@ -91,6 +91,7 @@ export const fetchApartmentsByFilters = createTool({
   description: 'Fetch apartments from Sanity using provided filters.',
   inputSchema: z.object({
     city: z.string().optional(),
+    experienceCategory: z.string().optional(),
     capacity: z.number().optional(),
     checkin: z.string().optional(),
     checkout: z.string().optional(),
@@ -98,10 +99,11 @@ export const fetchApartmentsByFilters = createTool({
   execute: async ({
     context,
   }: {
-    context: { city?: string; capacity?: number; checkin?: string; checkout?: string };
+    context: { city?: string; experienceCategory?: string; capacity?: number; checkin?: string; checkout?: string };
   }) => {
     const apartments = await fetchApartments({
       city: context.city,
+      experienceCategory: context.experienceCategory,
       capacity: context.capacity,
       checkin: context.checkin,
       checkout: context.checkout,

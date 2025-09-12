@@ -9,10 +9,11 @@ export async function fetchApartments(
   filters?: ApartmentListFilters
 ): Promise<ApartmentData[]> {
   try {
-    if (filters && (filters.city || filters.capacity)) {
+    if (filters && (filters.city || filters.experienceCategory || filters.capacity)) {
       const query = QUERY_ALL_APARTMENTS_FILTERED;
       const params = {
         city: filters.city ?? '',
+        experienceCategory: filters.experienceCategory ?? '',
         capacity: typeof filters.capacity === 'number' ? filters.capacity : undefined,
       };
       const data = await client.fetch<ApartmentData[]>(query, params);

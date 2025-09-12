@@ -4,6 +4,7 @@ import React from 'react';
 
 export type ApartmentListFilters = {
   city?: string;
+  experienceCategory?: string;
   capacity?: number;
   checkin?: string;
   checkout?: string;
@@ -22,6 +23,7 @@ const ApartmentFiltersContext = React.createContext<
 
 const defaultFilters: FiltersState = {
   city: undefined,
+  experienceCategory: undefined,
   capacity: undefined,
   checkin: undefined,
   checkout: undefined,

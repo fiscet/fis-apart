@@ -3,6 +3,9 @@ import { z } from 'zod';
 import { openai } from '@ai-sdk/openai';
 import { searchAgent } from '@/lib/mastra/agents/searchAgent';
 import { dataAgent } from '@/lib/mastra/agents/dataAgent';
+import { createApartmentSearchRuntimeContext } from '@/lib/mastra/runtime-context';
+import { client } from '@/lib/sanity/client';
+import { QUERY_EXPERIENCE_CATEGORIES, QUERY_CITIES } from '@/lib/sanity/queries';
 import type { ApartmentListFilters } from '@/providers/ApartmentFiltersProvider';
 import type { ApartmentData } from '@/types/apartment';
 
@@ -17,22 +20,63 @@ const BodySchema = z.object({
     .or(z.string()),
   threadId: z.string().optional(),
   resourceId: z.string().optional(),
+  runtimeContext: z.object({
+    'available-cities': z.array(z.object({
+      _id: z.string(),
+      name: z.string(),
+      slug: z.string(),
+      description: z.string().nullable().optional(),
+    })).optional(),
+    'available-experience-categories': z.array(z.object({
+      _id: z.string(),
+      name: z.string(),
+      slug: z.string(),
+      description: z.string().nullable().optional(),
+    })).optional(),
+  }).optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
     const json = await req.json();
-    const { messages, threadId, resourceId } = BodySchema.parse(json);
+    const { messages, threadId, resourceId, runtimeContext: runtimeContextData } = BodySchema.parse(json);
+
+    // Create runtime context and populate with data from request
+    const runtimeContext = createApartmentSearchRuntimeContext();
+
+    if (runtimeContextData) {
+      // Use data from request if available
+      if (runtimeContextData['available-cities']) {
+        runtimeContext.set('available-cities', runtimeContextData['available-cities']);
+      }
+      if (runtimeContextData['available-experience-categories']) {
+        runtimeContext.set('available-experience-categories', runtimeContextData['available-experience-categories']);
+      }
+    } else {
+      // Fallback: fetch data if not provided (for backward compatibility)
+      const [experienceCategories, cities] = await Promise.all([
+        client.fetch(QUERY_EXPERIENCE_CATEGORIES),
+        client.fetch(QUERY_CITIES),
+      ]);
+      runtimeContext.set('available-experience-categories', experienceCategories || []);
+      runtimeContext.set('available-cities', cities || []);
+    }
 
     const response = await searchAgent.generate(messages, {
       memory: threadId && resourceId ? { thread: threadId, resource: resourceId } : undefined,
       maxSteps: 3,
+      toolChoice: 'auto',
+      runtimeContext,
       structuredOutput: {
         schema: z.object({
           city: z
             .string()
             .optional()
             .describe('The city where the user wants to find an apartment'),
+          experienceCategory: z
+            .string()
+            .optional()
+            .describe('The experience category the user is interested in'),
           capacity: z.number().optional().describe('Number of guests/people'),
           checkin: z.string().optional().describe('Check-in date in YYYY-MM-DD format'),
           checkout: z.string().optional().describe('Check-out date in YYYY-MM-DD format'),
@@ -49,8 +93,12 @@ export async function POST(req: NextRequest) {
     let dataAgentResult: DataAgentResult | undefined = undefined;
 
     // Only call data agent if we have meaningful search criteria
-    const hasSearchCriteria = filters && typeof filters === 'object' &&
-      (filters.city || filters.capacity || filters.checkin || filters.checkout);
+    // Require: (city OR experienceCategory) AND dates AND guests
+    // If city is provided, experienceCategory is optional
+    const hasLocation = filters && (filters.city || filters.experienceCategory);
+    const hasDates = filters && filters.checkin && filters.checkout;
+    const hasGuests = filters && filters.capacity;
+    const hasSearchCriteria = hasLocation && hasDates && hasGuests;
 
     if (hasSearchCriteria) {
       // Pass filters to data agent which will use tool to fetch data
@@ -70,6 +118,7 @@ export async function POST(req: NextRequest) {
       let apartments: ApartmentData[] = [];
       type ToolResult = { toolName?: string; result?: { apartments?: ApartmentData[] } };
       const toolResults = (dataRes as { toolResults?: ToolResult[] }).toolResults;
+
       if (Array.isArray(toolResults)) {
         const first = toolResults.find(
           (tr) =>
@@ -87,6 +136,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ text, toolCalls: response.toolCalls, filters, dataAgentResult });
   } catch (e: unknown) {
+    console.error('Search API error:', e);
     const message = e instanceof Error ? e.message : 'Bad Request';
     return NextResponse.json({ error: message }, { status: 400 });
   }
