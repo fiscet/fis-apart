@@ -59,6 +59,7 @@ export const QUERY_ALL_APARTMENTS_FILTERED = `*[_type == "apartment" && active =
     images[0].image.asset->url,
     ""
   ),
+  pricePeriods,
   "currentPrice": select(
     defined(pricePeriods[@.startDate <= now() && @.endDate >= now() ][0].price) => pricePeriods[@.startDate <= now() && @.endDate >= now() ][0].price,
     defined(pricePeriods[0].price) => pricePeriods[0].price,

@@ -24,11 +24,11 @@ export function UserMenu() {
   };
 
   const signOut = () => {
-    console.log('signOut');
+    // TODO: Implement sign out functionality
   };
 
   const signInWithGoogle = () => {
-    console.log('signInWithGoogle');
+    // TODO: Implement Google sign in functionality
   };
 
   if (isAuthenticated && user) {

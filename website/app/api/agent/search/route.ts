@@ -24,13 +24,6 @@ export async function POST(req: NextRequest) {
     const json = await req.json();
     const { messages, threadId, resourceId } = BodySchema.parse(json);
 
-    console.log('🔍 Memory Debug:', {
-      threadId,
-      resourceId,
-      messagesCount: Array.isArray(messages) ? messages.length : 1,
-      memoryConfig: threadId && resourceId ? { thread: threadId, resource: resourceId } : 'No memory config',
-    });
-
     const response = await searchAgent.generate(messages, {
       memory: threadId && resourceId ? { thread: threadId, resource: resourceId } : undefined,
       maxSteps: 3,

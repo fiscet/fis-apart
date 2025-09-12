@@ -7,6 +7,16 @@ export interface ApartmentData {
   imageUrl?: string;
   currentPrice?: number | null;
   currentCurrency?: Currency | null;
+  totalPrice?: number | null;
+  totalDays?: number | null;
+  pricePeriods?: Array<{
+    _type: "priceRange";
+    startDate?: string;
+    endDate?: string;
+    price?: number;
+    currency?: "USD" | "EUR" | "GBP";
+    notes?: string;
+  }>;
   slug?: string | null;
   capacity?: { minGuests?: number; maxGuests?: number } | null;
 }
