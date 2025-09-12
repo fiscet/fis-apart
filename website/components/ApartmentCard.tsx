@@ -71,21 +71,36 @@ export function ApartmentCard({ apartment }: ApartmentCardProps) {
           </p>
         )}
         <div className="mt-2 flex items-center justify-between">
-          {typeof apartment.currentPrice === 'number' ? (
-            <div className="text-foreground text-lg font-bold">
-              <span>
-                {apartment.currentCurrency === 'USD'
-                  ? '$'
-                  : apartment.currentCurrency === 'GBP'
-                    ? '£'
-                    : '€'}
-                {apartment.currentPrice}
-              </span>
-              <span className="text-muted-foreground ml-1 text-sm font-normal">/ per night</span>
-            </div>
-          ) : (
-            <div />
-          )}
+          <div className="flex flex-col">
+            {typeof apartment.currentPrice === 'number' && (
+              <div className="text-foreground text-lg font-bold">
+                <span>
+                  {apartment.currentCurrency === 'USD'
+                    ? '$'
+                    : apartment.currentCurrency === 'GBP'
+                      ? '£'
+                      : '€'}
+                  {apartment.currentPrice}
+                </span>
+                <span className="text-muted-foreground ml-1 text-sm font-normal">/ night</span>
+              </div>
+            )}
+            {typeof apartment.totalPrice === 'number' && apartment.totalPrice > 0 && (
+              <div className="text-sm font-semibold text-green-600">
+                <span>
+                  {apartment.currentCurrency === 'USD'
+                    ? '$'
+                    : apartment.currentCurrency === 'GBP'
+                      ? '£'
+                      : '€'}
+                  {apartment.totalPrice}
+                </span>
+                <span className="text-muted-foreground ml-1 text-xs font-normal">
+                  total{apartment.totalDays ? ` (${apartment.totalDays} nights)` : ''}
+                </span>
+              </div>
+            )}
+          </div>
           {apartment.slug && (
             <a
               href={`/apartments/${apartment.slug}`}
