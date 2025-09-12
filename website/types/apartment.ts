@@ -10,6 +10,8 @@ export interface ApartmentData {
   slug?: string | null;
   capacity?: { minGuests?: number; maxGuests?: number } | null;
   score?: number | null;
+  calculatedTotalPrice?: number | null; // Total price for the stay duration
+  nights?: number; // Number of nights for the stay
 }
 
 // Extended type for RAG indexing with all apartment details

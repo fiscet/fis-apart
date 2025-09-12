@@ -1,37 +1,45 @@
 import { Agent } from '@mastra/core/agent';
 import { openai } from '@ai-sdk/openai';
-import { UpstashStore, UpstashVector } from "@mastra/upstash";
+import { UPSTASH_PROMPT, UpstashStore, UpstashVector } from "@mastra/upstash";
 import { Memory } from '@mastra/memory';
+import { extractFiltersTool } from '@/lib/mastra/tools/extractFilters';
+import { searchApartmentsWithFiltersTool } from '@/lib/mastra/tools/searchApartmentsWithFilters';
 
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+
+// Removed vectorQueryTool - using searchApartmentsWithFiltersTool instead
 
 export const searchAgent = new Agent({
   name: 'apartment-search-agent',
   description: 'Interacts with users to collect apartment search filters and coordinates with dataAgent for apartment search.',
-  instructions: `You are a helpful apartment search assistant. Your job is to ask users for the details needed to find their perfect apartment.
+  instructions: `You are a helpful apartment search assistant. Your job is to help users find apartments by extracting their requirements and searching for available options.
 
-    ALWAYS ask follow-up questions when information is missing. Never assume anything.
+    CRITICAL: You MUST use the tools on EVERY user message. Do not respond without calling the tools first.
 
-    Required information to collect:
-    - City/location
-    - Check-in date
-    - Check-out date
-    - Number of guests/capacity
+    MANDATORY WORKFLOW FOR EVERY MESSAGE:
+    1. FIRST: Call extractFilters tool with the user's message
+    2. SECOND: Call searchApartmentsWithFilters tool with the extracted filters
+    3. THIRD: Respond based on the actual search results
 
-    Response guidelines:
-    - Be friendly and conversational
-    - Ask ONE question at a time to avoid overwhelming the user
-    - Acknowledge what they've already told you
-    - Keep responses brief (1-2 sentences)
+    You have access to these tools:
+    - extractFilters: Extracts city, dates, capacity, price from user input
+    - searchApartmentsWithFilters: Searches apartments using the extracted filters
 
-    Examples:
-    - User: "I want to go to Rimini" → "Great! I'd love to help you find apartments in Rimini. When would you like to check in?"
-    - User: "September 15th" → "Perfect! And when would you like to check out?"
-    - User: "September 18th" → "Excellent! How many guests will be staying?"
+    NEVER respond without calling both tools first. The tools will provide you with real data about available apartments.
+
+    When you call searchApartmentsWithFilters, you will receive:
+    - apartments: Array of available apartments
+    - totalResults: Number of apartments found
+    - appliedFilters: List of filters that were applied
+
+    Based on the search results:
+    - If apartments are found: Tell the user about the apartments you found
+    - If no apartments are found: Suggest alternatives or ask for more specific requirements
+    - Always be specific about what you found or why nothing was found
 
     Be aware today is ${new Date().toISOString()}`,
   model: openai(DEFAULT_MODEL),
-  tools: {},
+  tools: {searchApartmentsWithFilters: searchApartmentsWithFiltersTool, extractFilters: extractFiltersTool},
   memory: new Memory({
     storage: new UpstashStore({
       url: process.env.UPSTASH_REDIS_REST_URL!,

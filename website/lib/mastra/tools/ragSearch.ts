@@ -1,16 +1,8 @@
 import { QueryResult } from '@mastra/core';
-import { UpstashVector } from '@mastra/upstash';
 import { openai } from "@ai-sdk/openai";
 import { embed } from "ai";
 import type { ApartmentData } from '@/types/apartment';
-
-// Function to get vector store instance
-function getVectorStore() {
-  return new UpstashVector({
-    url: process.env.UPSTASH_VECTOR_REST_URL!,
-    token: process.env.UPSTASH_VECTOR_REST_TOKEN!,
-  });
-}
+import { UpstashVector } from "@mastra/upstash";
 
 export const ragSearchTool = {
   id: 'rag_search',
@@ -40,7 +32,10 @@ export const ragSearchTool = {
       });
 
       // Search for similar apartments in the vector store
-      const vectorStore = getVectorStore();
+      const vectorStore = new UpstashVector({
+        url: process.env.UPSTASH_VECTOR_REST_URL!,
+        token: process.env.UPSTASH_VECTOR_REST_TOKEN!,
+      });
       const results = await vectorStore.query({
         indexName: 'apartments',
         queryVector: embedding,

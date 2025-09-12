@@ -7,6 +7,8 @@ export type ApartmentListFilters = {
   capacity?: number;
   checkin?: string;
   checkout?: string;
+  minPrice?: number;
+  maxPrice?: number;
 };
 
 type FiltersState = ApartmentListFilters;
@@ -25,6 +27,8 @@ const defaultFilters: FiltersState = {
   capacity: undefined,
   checkin: undefined,
   checkout: undefined,
+  minPrice: undefined,
+  maxPrice: undefined,
 };
 
 export function ApartmentFiltersProvider({

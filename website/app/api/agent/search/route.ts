@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { openai } from '@ai-sdk/openai';
 import { searchAgent } from '@/lib/mastra/agents/searchAgent';
-import { dataAgent } from '@/lib/mastra/agents/dataAgent';
+import { extractFiltersTool } from '@/lib/mastra/tools/extractFilters';
 import type { ApartmentListFilters } from '@/providers/ApartmentFiltersProvider';
-import type { ApartmentData } from '@/types/apartment';
 
 const BodySchema = z.object({
   message: z.string(),
@@ -12,82 +10,51 @@ const BodySchema = z.object({
   resourceId: z.string(),
 });
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const json = await req.json();
 
     const { message, threadId, resourceId } = BodySchema.parse(json);
 
-    // First, get structured filters from searchAgent
     console.log('/api/search -> Starting searchAgent generation with message:', message);
 
-    let text = '';
-    let filters: Partial<ApartmentListFilters> | undefined = undefined;
-
-    // Use regular generation to ensure we get text responses
-    const searchResponse = await searchAgent.generate(message, {
-      memory: { thread: threadId, resource: resourceId },
-      maxSteps: 3,
-      temperature: 0.3,
+    // Extract filters from the user message first
+    const filterResult = await extractFiltersTool.execute({
+      context: {
+        userInput: message,
+        conversationContext: '', // Could be enhanced with conversation history
+      }
     });
 
-    text = searchResponse.text ?? '';
-    filters = undefined; // We'll extract filters from the text response
+    console.log('/api/search -> Extracted filters:', filterResult.filters);
+
+    // Use searchAgent to generate response
+    const searchResponse = await searchAgent.generate(message, {
+      memory: { thread: threadId, resource: resourceId },
+      maxSteps: 5, // Increased to allow for tool usage
+      temperature: 0.1, // Lower temperature for more consistent tool usage
+      system: `You MUST use the extractFilters and searchApartmentsWithFilters tools before responding. Do not give generic responses about no apartments being available without first checking with the tools.`,
+    });
+
+    const text = typeof searchResponse.text === 'string' ? searchResponse.text : '';
+
+    // Use the filters extracted from the initial message
+    const finalFilters: Partial<ApartmentListFilters> = filterResult.filters;
 
     console.log('/api/search -> searchResponse.text:', text);
     console.log('/api/search -> searchResponse keys:', Object.keys(searchResponse));
-
-    // Then, use dataAgent to search apartments using RAG
-    type DataAgentResult = { text?: string; toolCalls?: unknown[]; apartments?: ApartmentData[] };
-    let dataAgentResult: DataAgentResult | undefined = undefined;
-
-    // Create a more specific search query using the original message
-    let searchQuery = message;
-
-    // Extract city from message if mentioned (look for "in [city]" pattern)
-    const cityMatch = message.match(/\bin\s+([a-zA-Z]+)\b/i);
-    if (cityMatch) {
-      searchQuery = `apartments in ${cityMatch[1]}`;
+    console.log('/api/search -> Tool calls made:', searchResponse.toolCalls?.length || 0);
+    if (searchResponse.toolCalls && searchResponse.toolCalls.length > 0) {
+      console.log('/api/search -> Tool calls details:', searchResponse.toolCalls);
     }
-
-    console.log('/api/search -> Using search query:', searchQuery);
-
-    // Always call dataAgent with the enhanced search query for RAG search
-    const dataRes = await dataAgent.generate(
-      [
-        { role: 'system', content: 'Use the rag_search tool to find apartments based on the user query.' },
-        { role: 'user', content: searchQuery },
-      ],
-      {
-        toolChoice: 'required',
-        maxSteps: 3,
-        temperature: 0.3, // Lower temperature for more consistent data retrieval
-      }
-    );
-
-    // Extract apartments from RAG search results
-    let apartments: ApartmentData[] = [];
-    type ToolResult = { toolName?: string; result?: { apartments?: ApartmentData[]; }; };
-    const toolResults = (dataRes as { toolResults?: ToolResult[]; }).toolResults;
-    if (Array.isArray(toolResults)) {
-      const first = toolResults.find(
-        (tr) =>
-          tr?.toolName === 'ragSearch' && Array.isArray(tr?.result?.apartments)
-      );
-      if (first?.result?.apartments) {
-        apartments = first.result.apartments;
-      }
-    }
-
-    dataAgentResult = { text: dataRes.text, toolCalls: dataRes.toolCalls, apartments };
+    console.log('/api/search -> Final filters:', finalFilters);
 
     console.log('/api/search -> Final response data:', {
       text: text.substring(0, 100) + '...',
-      filters,
-      apartmentsCount: dataAgentResult?.apartments?.length || 0
+      filters: finalFilters,
     });
 
-    return NextResponse.json({ text, toolCalls: searchResponse.toolCalls, filters, dataAgentResult });
+    return NextResponse.json({ text, toolCalls: searchResponse.toolCalls, filters: finalFilters });
   } catch (e: unknown) {
     console.error('API Error details:', e);
     const message = e instanceof Error ? e.message : 'Bad Request';

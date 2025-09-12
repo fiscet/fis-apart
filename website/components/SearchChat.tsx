@@ -1,17 +1,16 @@
 'use client';
 
 import React from 'react';
-import { useSearchResults } from '@/providers/SearchResultsProvider';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { HeroInput } from '@/components/ui/hero-input';
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import type { ApartmentData } from '@/types/apartment';
+import type { ApartmentListFilters } from '@/providers/ApartmentFiltersProvider';
 
 type ChatMessage = { id: string; role: 'user' | 'assistant'; content: string };
 
 export default function SearchChat() {
-  const { setApartments, setIsSearchActive } = useSearchResults();
+  // Note: Removed useSearchResults since we're only using searchAgent for conversation
   const [threadId, setThreadId] = React.useState<string>('');
   const [resourceId, setResourceId] = React.useState<string>('');
   const [messages, setMessages] = React.useState<ChatMessage[]>([
@@ -67,9 +66,12 @@ export default function SearchChat() {
               ...historyMessages
             ]);
           }
+        } else {
+          console.log('Chat history API returned error:', res.status, res.statusText);
         }
       } catch (error) {
         console.log('Could not load chat history:', error);
+        // Don't show error to user, just continue with empty chat
       }
     }
 
@@ -119,36 +121,25 @@ export default function SearchChat() {
 
       const data: {
         text?: string;
-        dataAgentResult?: {
-          apartments?: ApartmentData[];
-        };
+        filters?: Partial<ApartmentListFilters>;
+        toolCalls?: unknown[];
       } = await res.json();
 
       console.log('API Response:', data);
-      const botText: string = data?.text || 'Sorry, something went wrong.';
+
+      // Ensure we only use string content for the message
+      const botText: string = typeof data?.text === 'string' ? data.text : 'Sorry, something went wrong.';
+
       setMessages((prev) => [
         ...prev,
         { id: crypto.randomUUID(), role: 'assistant', content: botText },
       ]);
 
-      // Use apartments from dataAgent result
-      const apartments = data?.dataAgentResult?.apartments;
-      if (apartments && Array.isArray(apartments)) {
-        if (apartments.length > 0) {
-          setApartments(apartments);
-          setIsSearchActive(true);
-        } else {
-          // No apartments found - add a message to inform the user
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: crypto.randomUUID(),
-              role: 'assistant',
-              content: 'Sorry, I couldn\'t find any apartments matching your criteria. Please try adjusting your search parameters (different dates, location, or number of guests).'
-            },
-          ]);
-        }
-      }
+      // Note: Since we're only using searchAgent now, we don't have apartment results
+      // The searchAgent will provide conversational responses about apartment search criteria
+      // If you want to add apartment search functionality back, you can either:
+      // 1. Add tools to the searchAgent, or
+      // 2. Integrate with a different apartment search API
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -197,7 +188,7 @@ export default function SearchChat() {
                   <div
                     className={`inline-block rounded-xl px-3 py-2 max-w-[80%] break-words ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}
                   >
-                    {m.content}
+                    {typeof m.content === 'string' ? m.content : JSON.stringify(m.content)}
                   </div>
                 </div>
               ))}

@@ -15,25 +15,16 @@ function getVectorStore() {
 function createApartmentChunks(apartment: ApartmentDataComplete) {
   const chunks = [];
 
-  // Chunk 1: Basic info and location
-  const basicInfo = [
-    `Apartment: ${typeof apartment.name === 'string' ? apartment.name : 'Unknown'}`,
-    `Location: ${typeof apartment.location?.city === 'string' ? apartment.location.city : 'Unknown'}, ${typeof apartment.location?.country === 'string' ? apartment.location.country : 'Unknown'}`,
-    `Category: ${typeof apartment.category === 'string' ? apartment.category : 'Unknown'}`,
-    `Capacity: ${apartment.capacity?.minGuests || 0}-${apartment.capacity?.maxGuests || 0} guests`,
-    `Price: ${apartment.currentPrice || 'N/A'} ${typeof apartment.currentCurrency === 'string' ? apartment.currentCurrency : 'EUR'}`
-  ].filter(Boolean).join('. ');
-
-  // Only add chunk if it has meaningful content
-  if (basicInfo.trim().length > 0) {
+  // Chunk 1: Name only
+  if (apartment.name && typeof apartment.name === 'string' && apartment.name.trim().length > 0) {
     chunks.push({
-      id: `${apartment._id}_basic`,
-      text: basicInfo.trim(),
-      type: 'basic_info'
+      id: `${apartment._id}_name`,
+      text: apartment.name.trim(),
+      type: 'name'
     });
   }
 
-  // Chunk 2: Description
+  // Chunk 2: Description only
   if (apartment.description && typeof apartment.description === 'string' && apartment.description.trim().length > 0) {
     chunks.push({
       id: `${apartment._id}_description`,
@@ -42,7 +33,7 @@ function createApartmentChunks(apartment: ApartmentDataComplete) {
     });
   }
 
-  // Chunk 3: Amenities
+  // Chunk 3: Amenities only
   if (apartment.amenities && apartment.amenities.length > 0) {
     const amenityNames = apartment.amenities
       .map(a => a?.name)
@@ -50,10 +41,9 @@ function createApartmentChunks(apartment: ApartmentDataComplete) {
       .join(', ');
 
     if (amenityNames.trim().length > 0) {
-      const amenitiesText = `Amenities: ${amenityNames}`;
       chunks.push({
         id: `${apartment._id}_amenities`,
-        text: amenitiesText.trim(),
+        text: amenityNames.trim(),
         type: 'amenities'
       });
     }
@@ -90,6 +80,12 @@ export async function indexApartment(apartment: ApartmentDataComplete) {
           value: textToEmbed
         });
 
+        // Format amenities as comma-separated names
+        const amenityNames = apartment.amenities
+          ?.map(a => a?.name)
+          .filter(name => typeof name === 'string' && name.trim().length > 0)
+          .join(', ') || '';
+
         await vectorStore.upsert({
           indexName: 'apartments',
           ids: [chunk.id],
@@ -99,28 +95,16 @@ export async function indexApartment(apartment: ApartmentDataComplete) {
             chunkType: chunk.type,
             apartmentId: apartment._id,
             apartmentName: apartment.name,
+            // Only include the specified properties in metadata
+            _id: apartment._id,
+            name: apartment.name,
+            description: apartment.description,
             location: apartment.location,
             currentPrice: apartment.currentPrice,
             currentCurrency: apartment.currentCurrency,
             capacity: apartment.capacity,
-            category: apartment.category,
-            imageUrl: apartment.imageUrl,
-            slug: apartment.slug,
-            // Include the full apartment data for easy retrieval
-            fullApartment: {
-              _id: apartment._id,
-              name: apartment.name,
-              description: apartment.description,
-              location: apartment.location,
-              currentPrice: apartment.currentPrice,
-              currentCurrency: apartment.currentCurrency,
-              capacity: apartment.capacity,
-              amenities: apartment.amenities,
-              category: apartment.category,
-              imageUrl: apartment.imageUrl,
-              slug: apartment.slug,
-              images: apartment.images
-            }
+            amenities: amenityNames, // Comma-separated names only
+            category: apartment.category
           }]
         });
 
